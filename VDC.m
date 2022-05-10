@@ -6,21 +6,27 @@ clear;close all; clc;
 % Zahiri Oumaïma
 
 %% Datas
-cities = [4 8 9 0 2 7  ;
-          2 1 5 4 3 9 ];
+cities = [-2 -5 -1 -6 3 5 -4 2 4 0 1 -3 8 7 6;
+          -3 3 6 -2 1 5 0 -5 -1 4 -4 8 7 -6 2]
+      
+%random first chemin
+chemin = randperm(size(cities,2),size(cities,2));
  
-%chemin = [ 6 2 3 4 1 5];
- chemin =[6 5 3 4 2 1];
 fin = [0;0];
 pos = [0;0]; %initial starting point
-tabu=[];
+tabuList= [];
+% elements stays in tabuList for exactly tabuListSIZE iterations 
+tabuListSIZE = 25;
+BestDist = inf;
+
 %% calcul de la distance avec un chemin
 distance = calcDist(chemin,cities);
 %% calcul des variations du coût avec permutation de (i,j)
 perm = Permutation(chemin) ; 
-for p=1:5
+
+for p=1:10000
     distance = calcDist(chemin,cities);
-    bestDelta= 1000;
+    bestDelta= inf;
     
     for j=1:size(perm')
         % Permutation de 2 termes dans un chemin
@@ -31,15 +37,35 @@ for p=1:5
         r2 = cheminbis(p2);
         cheminbis(p2) = r1;
         cheminbis(p1) = r2;
+        
+        NewDist = calcDist(cheminbis,cities);
 
-        delta = calcDist(cheminbis,cities) - distance;
+        delta = NewDist - distance;
         if delta<bestDelta 
-            bestDelta = delta ; 
-            bestPerm = perm(:,j);
-            bestChemin = cheminbis;
-            [ cities(:,bestPerm(1))  cities(:,bestPerm(2)) ];
+            %best result not in tabu list but aspiration criterium 
+            if ( sum(sum(ismember( [ cities(:, perm(1,j)) cities(:, perm(2,j) ) ] , tabuList)))<4 )  || (NewDist< BestDist)         
+                bestDelta = delta ; 
+                IterrateBestPerm = perm(:,j);
+                IterrateBestChemin = cheminbis;
+            end
         end
     end
-    chemin = bestChemin;
-    tabu = [];
+    
+    % update chemin
+    chemin = IterrateBestChemin;
+    
+    %save best ever results
+    if distance < BestDist
+        BestDist = distance;
+        BestChemin = chemin;
+    end 
+    
+    %update Tabu LIST
+    if size(tabuList ,2) < 2*tabuListSIZE
+        tabuList = [ tabuList   [ cities(:,IterrateBestPerm(1))   cities(:,IterrateBestPerm(2))]] ;
+    else 
+        tabuList = [ tabuList(:,3:2*tabuListSIZE) [ cities(:,IterrateBestPerm(1))   cities(:,IterrateBestPerm(2))]];
+    end
+   
+   
 end
