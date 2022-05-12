@@ -6,17 +6,17 @@ clear;close all; clc;
 % Zahiri Oumaïma
 
 %% Datas
-cities = [-2 -5 -1 -6 3 5 -4 2 4 0 1 -3 8 7 6;
-          -3 3 6 -2 1 5 0 -5 -1 4 -4 8 7 -6 2]
+cities = [-19 19 -11 -2 0 18 -9 -6 5 3 10 9 -7 20 21 12 11 16 17 8 -17 14 25 2 -22 -5 7 -1 1 15 22 -24 4 -21 -20 6 -18 -3 -23 -4 -12 -13 -16 -8 13 24 -14 -15 23 -10;
+          9 -14 21 1 -16 7 13 -21 8 3 20 18 6 -12 2 4 -19 -15 17 -1 -22 -9 -18 16 -11 -20 -3 -10 -13 -4 -7 15 25 19 12 24 22 -23 -5 -17 11 0 5 -2 -24 -6 -8 10 14 23]
       
 %random first chemin
 chemin = randperm(size(cities,2),size(cities,2));
  
 fin = [0;0];
 pos = [0;0]; %initial starting point
-tabuList= [];
-% elements stays in tabuList for exactly tabuListSIZE iterations 
-tabuListSIZE = 25;
+
+tlist=zeros(size(cities,2),size(cities,2));
+tabuTime = 75;
 BestDist = inf;
 
 %% calcul de la distance avec un chemin
@@ -24,11 +24,12 @@ distance = calcDist(chemin,cities);
 %% calcul des variations du coût avec permutation de (i,j)
 perm = Permutation(chemin) ; 
 
-for p=1:10000
+for p=1:2500
+    
     distance = calcDist(chemin,cities);
     bestDelta= inf;
     
-    for j=1:size(perm')
+    for j=1:size(perm') %for each permutation.
         % Permutation de 2 termes dans un chemin
         cheminbis = chemin ; 
         p1 = perm(1,j);
@@ -41,9 +42,10 @@ for p=1:10000
         NewDist = calcDist(cheminbis,cities);
 
         delta = NewDist - distance;
+        
         if delta<bestDelta 
             %best result not in tabu list but aspiration criterium 
-            if ( sum(sum(ismember( [ cities(:, perm(1,j)) cities(:, perm(2,j) ) ] , tabuList)))<4 )  || (NewDist< BestDist)         
+            if ( tlist(perm(1,j),perm(2,j)) == 0 ) || ( NewDist < BestDist )     
                 bestDelta = delta ; 
                 IterrateBestPerm = perm(:,j);
                 IterrateBestChemin = cheminbis;
@@ -51,21 +53,15 @@ for p=1:10000
         end
     end
     
-    % update chemin
+    % update chemin an tabuList
+    tlist(find(tlist~=0)) = tlist(find(tlist~=0)) -1 ;
     chemin = IterrateBestChemin;
-    
+    tlist(IterrateBestPerm(1),IterrateBestPerm(2)) = tabuTime ; 
+    tlist(IterrateBestPerm(2),IterrateBestPerm(1)) = tabuTime ; 
     %save best ever results
     if distance < BestDist
-        BestDist = distance;
+        BestDist = distance ;
         BestChemin = chemin;
     end 
-    
-    %update Tabu LIST
-    if size(tabuList ,2) < 2*tabuListSIZE
-        tabuList = [ tabuList   [ cities(:,IterrateBestPerm(1))   cities(:,IterrateBestPerm(2))]] ;
-    else 
-        tabuList = [ tabuList(:,3:2*tabuListSIZE) [ cities(:,IterrateBestPerm(1))   cities(:,IterrateBestPerm(2))]];
-    end
-   
-   
+
 end
