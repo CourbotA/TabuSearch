@@ -3,35 +3,34 @@ clear;close all; clc;
 
 % Chabrol Agathe
 % Courbot Antoine
-% Zahiri Oumaïma
+% Zahiri Oumaima
+
+rand('state',40);
 
 %% Datas
-cities = [-2 -5 -1 -6 3 5 -4 2 4 0 1 -3 8 7 6;
-          -3 3 6 -2 1 5 0 -5 -1 4 -4 8 7 -6 2]
-      
+cities = round(rand(2,10)*20-10);
+
 %random first chemin
 chemin = randperm(size(cities,2),size(cities,2));
  
 fin = [0;0];
 pos = [0;0]; %initial starting point
-tabuList= [];
+
 tlist=zeros(size(cities,2),size(cities,2));
-tabuTime = 5;
-% elements stays in tabuList for exactly tabuListSIZE iterations 
-tabuListSIZE = 25;
+tabuTime = 11;
 BestDist = inf;
 
 %% calcul de la distance avec un chemin
 distance = calcDist(chemin,cities);
-%% calcul des variations du coût avec permutation de (i,j)
+%% calcul des variations du coÃ»t avec permutation de (i,j)
 perm = Permutation(chemin) ; 
 
-for p=1:10000
+for p=1:200
     
     distance = calcDist(chemin,cities);
     bestDelta= inf;
     
-    for j=1:size(perm')
+    for j=1:size(perm') %for each permutation.
         % Permutation de 2 termes dans un chemin
         cheminbis = chemin ; 
         p1 = perm(1,j);
@@ -56,22 +55,31 @@ for p=1:10000
     end
     
     % update chemin an tabuList
-    tlist(find(tlist~=0)) = tlist(find(tlist~=0)) -1 
+    tlist(find(tlist~=0)) = tlist(find(tlist~=0)) -1 ;
     chemin = IterrateBestChemin;
     tlist(IterrateBestPerm(1),IterrateBestPerm(2)) = tabuTime ; 
     tlist(IterrateBestPerm(2),IterrateBestPerm(1)) = tabuTime ; 
     %save best ever results
-    if NewDist < BestDist
-        BestDist = NewDist;
+    if distance < BestDist
+        BestDist = distance ;
         BestChemin = chemin;
     end 
-    
-    %update Tabu LIST
-    if size(tabuList ,2) < 2*tabuListSIZE
-        tabuList = [ tabuList   [ cities(:,IterrateBestPerm(1))   cities(:,IterrateBestPerm(2))]] ;
-    else 
-        tabuList = [ tabuList(:,3:2*tabuListSIZE) [ cities(:,IterrateBestPerm(1))   cities(:,IterrateBestPerm(2))]];
-    end
-   
-   
+
 end
+% 
+%BestChemin=[4 7 8 6 3 1 5 2];
+copycities = [];
+for i=1:size(chemin,2)
+    copycities(:,i)=cities(:,BestChemin(i));
+end
+figure()
+hold on
+plot(0,0,'*k');
+plot(copycities(1,:),copycities(2,:),'*r');
+plot([0 copycities(1,:) 0],[0 copycities(2,:) 0],'-b');
+axis([-12,12 -12,12]);
+legend('La position initiale et finale','Les positions des villes', 'Le chemin optimal');
+title(sprintf('Le chemin optimal pour un ensemble de %d villes',size(chemin,2)))
+hold off,
+
+calcDist(BestChemin,cities)
